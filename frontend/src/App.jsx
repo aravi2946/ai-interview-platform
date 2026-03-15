@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom"
 import Dashboard from "./pages/Dashboard"
 import Login from "./pages/Login"
+import InterviewDashboard from "./pages/InterviewDashboard"
 
 
 const ProtectedRoute = ({children}) => {
@@ -19,6 +20,11 @@ const App = () => {
                   </ProtectedRoute>
               } 
               />
+              <Route path="/interview/:id" element={
+                  <ProtectedRoute>
+                      <InterviewDashboard/>
+                  </ProtectedRoute>
+              } />
 
               <Route path="*" element={<Login/>} />
               
