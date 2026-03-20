@@ -1,5 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useContext } from "react";
 import axios from "axios"
+import { useNavigate, useParams } from "react-router-dom"
+import { AiContext } from "../Context/AI-Context";
 const BotIcon = () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="11" width="18" height="10" rx="2" />
@@ -36,30 +38,7 @@ const formatTime = (date) =>
         hour: "numeric", minute: "2-digit", second: "2-digit", hour12: true,
     });
 
-const initialMessages = [
-    {
-       
-        role: "assistant",
-        content:
-            "Hello! I'm your AI interviewer for the Frontend Developer position (Intern level). This will be a Technical Screening interview. Are you ready to begin?",
-        time: new Date(),
-    },
-    // { id: 2, role: "user", content: "ok", time: new Date() },
-    // {
-    //     id: 3,
-    //     role: "assistant",
-    //     content:
-    //         "Great, let's start.\n\nFirst question (HTML/CSS fundamentals):\nCan you explain the difference between `block`, `inline`, and `inline-block` elements in CSS, and give one example of when you might use each?",
-    //     time: new Date(),
-    // },
-    // {
-    //     id: 4,
-    //     role: "user",
-    //     content:
-    //         "Block Elements Behavior: Take up the full width available, starting on a new line.\n\nExamples: <div>, <p>, <h1>–<h6>.",
-    //     time: new Date(),
-    // },
-];
+
 
 const renderContent = (text) =>
     text.split(/(`[^`]+`)/g).map((part, i) => {
@@ -83,37 +62,113 @@ const renderContent = (text) =>
     });
 
 export default function InterviewDashboard() {
-    const [messages, setMessages] = useState(initialMessages);
+    // const { details } = useContext(AiContext)
+    const [details, setDetails] = useState(() => {
+        return JSON.parse(localStorage.getItem("Candidate")) || null
+    })
+    const navigate = useNavigate()
+   
+    
+    const [messages, setMessages] = useState([
+        {
+
+            role: "assistant",
+            content:
+                `Hello! I'm your AI interviewer for the ${details?.role} position ${details?.experience}. This will be a ${details?.interviewType} interview. Are you ready to begin?`,
+
+            time: new Date(),
+        },
+    ]);
     const [input, setInput] = useState("");
     const [sessionTime] = useState(new Date());
     const bottomRef = useRef(null);
     const textareaRef = useRef(null);
-    
+
+    //interviewId
+    const { id } = useParams()
+
+    useEffect(() => {
+        if (id) {
+            console.log("Stored in localstorage");
+            localStorage.setItem("InterviewId", id)
+        }
+
+    }, [id])
+
 
     useEffect(() => {
         const data = JSON.parse(localStorage.getItem("Interview"));
-        setMessages(data)
-    },[])
+        const cand = JSON.parse(localStorage.getItem("Candidate"));
+        console.log("data", data);
+        console.log("cand", cand);
+        
+        
+        if(data)
+            setMessages(data)
+        else
+            setMessages([{
+
+                role: "assistant",
+                content:
+                    `Hello! I'm your AI interviewer for the ${details?.role} position ${details?.experience}. This will be a ${details?.interviewType} interview. Are you ready to begin?`,
+
+                time: new Date(),
+            },])
+            
+        if (cand)
+            setDetails(cand)
+
+
+        
+    }, [])
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
         localStorage.setItem("Interview", JSON.stringify(messages))
-    
-        
-    }, [messages]);
-  
 
-    const handleSend = async() => {
+
+    }, [messages]);
+
+    const handleEndBtn = async () => {
+        const data = JSON.parse(localStorage.getItem("Interview"))
+        if(data)
+        console.log(data);
+
+        try {
+            const ans = window.confirm("Do you want to end this interview")
+            if (!ans) return;
+            console.log(data);
+
+            const res = await axios.post(`http://localhost:3000/api/interviews/${id}/end`, {data:data})
+          
+            if (res.status == 200) {
+                localStorage.removeItem("Candidate")
+                localStorage.removeItem("Interview")
+                localStorage.removeItem("InterviewId")
+                alert(res.data.msg)
+                navigate('/dashboard')
+                
+            }
+
+
+        } catch (err) {
+            console.log(err);
+
+        }
+
+    }
+
+    const handleSend = async () => {
         const trimmed = input.trim();
         if (!trimmed) return;
         const userData = {
             role: "user",
             content: trimmed,
-            time:new Date()
+            time: new Date()
         }
         const updated = [...messages]
         updated.push(userData)
-        
+
         setMessages((prev) => [
             ...prev,
             { role: "user", content: trimmed, time: new Date() },
@@ -121,25 +176,21 @@ export default function InterviewDashboard() {
 
         setInput("");
         try {
-        
-            
-            const res = await axios.post(`http://localhost:3000/interviews/session`,
-                { history: [...updated]}) 
-            
+
+            const res = await axios.post(`http://localhost:3000/api/interviews/session`,
+                { history: [...updated], details: details })
+
             const result = {
                 role: "assistant",
                 content: res.data.message,
-                time:new Date()
+                time: new Date()
             }
-          
-           
-            setMessages((prev) => [...prev,result])
-            
-            
-            
+
+            setMessages((prev) => [...prev, result])
+
         } catch (err) {
-            console.log("Frontend",err);
-            
+            console.log("Frontend", err);
+
         }
         if (textareaRef.current) {
             textareaRef.current.style.height = "auto";
@@ -174,19 +225,22 @@ export default function InterviewDashboard() {
                     <div className="flex items-center gap-2.5">
                         <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 animate-pulse" style={{ boxShadow: "0 0 8px #34d399" }} />
                         <h1 className="text-base font-bold text-slate-100 tracking-tight whitespace-nowrap">
-                            Frontend Developer Interview
+                            {details?.role} Interview
                         </h1>
                     </div>
-                    <p className="text-xs text-slate-500 pl-[18px]" style={{ fontFamily: "monospace", letterSpacing: "0.04em" }}>
-                        Technical Screening&nbsp;•&nbsp;Intern
+                    <p className="text-xs text-slate-500 pl-4.5" style={{ fontFamily: "monospace", letterSpacing: "0.04em" }}>
+                        {details?.interviewType}&nbsp;•&nbsp;{details?.experience.split(" ")[2]}
                     </p>
                 </div>
 
-                <button
+                <button onClick={handleEndBtn}
                     className="flex items-center gap-2 border border-red-500 text-red-400 hover:bg-red-500 hover:text-white transition-colors duration-200 px-4 py-2 rounded-lg text-xs font-semibold shrink-0 cursor-pointer"
                 >
+
+
                     <FeedbackIcon />
                     <span className="hidden sm:inline">End &amp; Get Feedback</span>
+
                 </button>
             </header>
 
@@ -210,7 +264,7 @@ export default function InterviewDashboard() {
                         </span>
                     </div>
 
-                    {messages.map((msg,index) => (
+                    {messages.map((msg, index) => (
                         <div
                             key={index}
                             className={`flex items-start gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
@@ -218,8 +272,8 @@ export default function InterviewDashboard() {
                             {/* avatar */}
                             <div
                                 className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 border ${msg.role === "user"
-                                        ? "text-slate-400"
-                                        : "text-emerald-400"
+                                    ? "text-slate-400"
+                                    : "text-emerald-400"
                                     }`}
                                 style={{
                                     backgroundColor:
@@ -238,8 +292,8 @@ export default function InterviewDashboard() {
                             {/* bubble */}
                             <div
                                 className={`px-4 py-3.5 text-sm leading-relaxed ${msg.role === "user"
-                                        ? "text-white rounded-2xl rounded-tr-sm"
-                                        : "text-slate-300 rounded-2xl rounded-tl-sm border"
+                                    ? "text-white rounded-2xl rounded-tr-sm"
+                                    : "text-slate-300 rounded-2xl rounded-tl-sm border"
                                     }`}
                                 style={{
                                     maxWidth: "min(560px, 80%)",
@@ -309,8 +363,9 @@ export default function InterviewDashboard() {
                         <div key={i} className="w-1.5 h-1.5 bg-slate-500 rounded-sm" />
                     ))}
                 </div>
-               
+
             </div>
         </div>
     );
 }
+

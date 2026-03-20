@@ -12,7 +12,8 @@ app.use(express.json())
 app.use(cors({origin:"http://localhost:5173",credentials:true}))
 app.use("/api/auth",authController)
 app.use('/api/open', aiRouter)
-app.use("/interviews",interviewRoute)
+app.use("/api/interviews", interviewRoute)
+
 //Database connection
 connectToDB();
 

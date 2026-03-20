@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from 'axios'
+import { useNavigate } from "react-router-dom";
 const roles = [
     "Frontend Developer", "Backend Developer", "Fullstack Developer",
     "DevOps Engineer", "Data Scientist", "ML Engineer",
@@ -17,6 +18,7 @@ const interviewTypes = [
 ];
 
 function SelectField({ label, value, onChange, options, placeholder }) {
+    
     return (
         <div className="flex flex-col gap-1">
             <label className="text-sm font-semibold text-slate-200 tracking-wide">
@@ -49,6 +51,7 @@ export default function ConfigureInterview() {
     const [experience, setExperience] = useState("");
     const [interviewType, setInterviewType] = useState("");
     const [submitted, setSubmitted] = useState(null);
+    const navigate = useNavigate()
 
     const isValid = role && experience && interviewType;
 
@@ -57,19 +60,29 @@ export default function ConfigureInterview() {
         const obj = JSON.parse(localData)
         if (!isValid) return;
         setSubmitted({ role, experience, interviewType });
-       
-        
-        try {
-            let res = await axios.post('http://localhost:3000/interviews/setup', {id:obj.id, role, experience, interviewType })
-          
-            console.log(res.data.msg);
-            
-            
-        } catch (err) {
-            console.log("Error at handleBegin");
-            
+        let candidate = {
+            role,
+            experience,
+            interviewType
         }
-        
+        localStorage.setItem("Candidate", JSON.stringify(candidate));
+
+        try {
+            let res = await axios.post('http://localhost:3000/api/interviews/setup', { id: obj.id, role, experience, interviewType })
+            
+            //store interviewId in localStorage
+            localStorage.setItem('InterviewId',res.data.InterviewId)
+            if (res.status == "200") {  
+                navigate(`/interview/${res.data.InterviewId}`)
+            }
+                
+
+
+        } catch (err) {
+            console.log(err,"Error at handleBegin");
+
+        }
+
         setShowModal(false);
         setRole(""); setExperience(""); setInterviewType("");
     };
@@ -94,7 +107,7 @@ export default function ConfigureInterview() {
             </button>
 
             {/* Result card after submit */}
-            {submitted && (
+            {/* {submitted && (
                 <div className="mt-8 bg-slate-800 border border-slate-700 rounded-xl p-5 w-full max-w-sm text-sm text-slate-300 space-y-2">
                     <p className="text-cyan-400 font-semibold text-base mb-3">Session Configured</p>
                     <p><span className="text-slate-400">Role:</span> {submitted.role}</p>
@@ -107,7 +120,7 @@ export default function ConfigureInterview() {
                         Clear
                     </button>
                 </div>
-            )}
+            )} */}
 
             {/* Modal Overlay */}
             {showModal && (
@@ -163,8 +176,8 @@ export default function ConfigureInterview() {
                             onClick={handleBegin}
                             disabled={!isValid}
                             className={`mt-6 w-full py-3 rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 ${isValid
-                                    ? "bg-cyan-500 hover:bg-cyan-400 text-slate-900 hover:scale-[1.02] active:scale-[0.98] cursor-pointer shadow-lg shadow-cyan-500/20"
-                                    : "bg-cyan-900/40 text-cyan-500/40 cursor-not-allowed"
+                                ? "bg-cyan-500 hover:bg-cyan-400 text-slate-900 hover:scale-[1.02] active:scale-[0.98] cursor-pointer shadow-lg shadow-cyan-500/20"
+                                : "bg-cyan-900/40 text-cyan-500/40 cursor-not-allowed"
                                 }`}
                         >
                             Begin Session

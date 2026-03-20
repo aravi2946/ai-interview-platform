@@ -6,16 +6,20 @@ const client = new Groq({
 })
 
 const AiController = async (req, res) => {
-    const { history } = req.body;
-
+    const { history,details } = req.body;
+  
+    
     const cleanMessages = history.map(m => ({
         role: m.role,
         content:m.content
     }))
+    
+    
+    
      
-    let role = "frontend"
-    let experience = "intern"
-    let interviewType = "HR"
+    let role = details.role
+    let experience = details.experience
+    let interviewType = details.interviewType
 
     const systemPrompt = {
         role: "system",

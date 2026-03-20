@@ -2,12 +2,19 @@ import { Route, Routes } from "react-router-dom"
 import Dashboard from "./pages/Dashboard"
 import Login from "./pages/Login"
 import InterviewDashboard from "./pages/InterviewDashboard"
+import ProtectInterviewRoute from "./Protect/ProtectInterviewRoute"
+
+
+
 
 
 const ProtectedRoute = ({children}) => {
     const token = localStorage.getItem('token')
     return token?children:""
 }
+
+
+
 
 const App = () => {
   return (
@@ -21,9 +28,9 @@ const App = () => {
               } 
               />
               <Route path="/interview/:id" element={
-                  <ProtectedRoute>
+                  <ProtectInterviewRoute>
                       <InterviewDashboard/>
-                  </ProtectedRoute>
+                  </ProtectInterviewRoute>
               } />
 
               <Route path="*" element={<Login/>} />
