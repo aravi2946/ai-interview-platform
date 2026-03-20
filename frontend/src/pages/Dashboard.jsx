@@ -1,23 +1,22 @@
+import { useContext } from "react";
+import ConfigureInterview from "./ConfigureInterview";
+import { AiContext } from "../Context/AI-Context";
 
 
 
 const Dashboard = () => {
     const user = JSON.parse(localStorage.getItem("user"))
+    const {} = useContext(AiContext)
+    return (
+        <div className="">
+            
+            <ConfigureInterview/>
 
-  return (
-      <div>
-          <h2>Welcome, {user?.name}</h2>
-          <p>{user?.email}</p>
-          
-          <button onClick={() =>
-              {localStorage.clear(); window.location.href = '/login'}}>
-          Logout
-          </button>
 
-      
-      </div>
-      
-  )
+
+        </div>
+
+    )
 }
 
 export default Dashboard
