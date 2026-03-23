@@ -3,6 +3,7 @@ import Dashboard from "./pages/Dashboard"
 import Login from "./pages/Login"
 import InterviewDashboard from "./pages/InterviewDashboard"
 import ProtectInterviewRoute from "./Protect/ProtectInterviewRoute"
+import LandingPage from "./pages/LandingPage"
 
 
 
@@ -20,6 +21,7 @@ const App = () => {
   return (
       <div>
           <Routes>
+              <Route path="/" element={<LandingPage/>} />
               <Route path='/login' element={<Login />} />
               <Route path='/dashboard' element={
                   <ProtectedRoute>
