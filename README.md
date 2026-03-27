@@ -143,7 +143,7 @@ The app will be running at `http://localhost:5173`.
 
 ## 🙋‍♂️ Author
 
-**Aravind** — CSE Final Year @ Pace Institute of Technology and Sciences  
+**Aravind** — CSE Prefinal Year @ Pace Institute of Technology and Sciences  
 [LinkedIn](https://linkedin.com/in/your-profile) · [GitHub](https://github.com/your-username)
 
 ---
